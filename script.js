@@ -52,7 +52,8 @@
     collectibles: [], // changed from obstacles to collectibles
     nextCollectibleSpawn: 800, // Much reduced initial delay for more boxes
     gravity: 1200, // reduced gravity for better jump control
-    jumpVelocity: -1300, // increased jump strength for higher jumps
+    jumpVelocity: -700, // increased jump strength for higher jumps (legacy)
+    flapVelocity: -700, // Flappy Bird style: upward boost velocity (smaller than jumpVelocity)
     groundY: 1870, // will be updated by resizeCanvas() based on actual canvas height
     micEnabled: false,
     gameStartTime: 0, // track when game started for 30-second limit
@@ -108,12 +109,14 @@
     
     // Update responsive physics based on scale (mobile devices get adjusted physics)
     const baseGravity = 1200;
-    const baseJumpVelocity = -1300;
+    const baseJumpVelocity = -700;
+    const baseFlapVelocity = -700; // Flappy Bird style boost
     const baseScrollSpeed = 316;
     
     // Scale physics to match canvas size for consistent gameplay feel
     state.gravity = baseGravity * window.gameScale;
     state.jumpVelocity = baseJumpVelocity * window.gameScale;
+    state.flapVelocity = baseFlapVelocity * window.gameScale;
     state.scrollSpeed = baseScrollSpeed * window.gameScale;
     
     // Update existing game elements if they exist
@@ -285,19 +288,18 @@
     }
     
     jump() {
-      if (this.onGround) {
-        this.vy = state.jumpVelocity;
-        this.onGround = false;
-        playSound('jump'); // Play jump sound
-      }
+      // Flappy Bird style: Apply upward boost anytime (no ground check)
+      // Set velocity to flap strength (negative = upward)
+      this.vy = state.flapVelocity;
+      this.onGround = false;
+      playSound('jump'); // Play jump sound
     }
     
     jumpWithStrength(strength) {
-      if (this.onGround) {
-        this.vy = strength;
-        this.onGround = false;
-        playSound('jump'); // Play jump sound
-      }
+      // Flappy Bird style: Apply custom strength boost anytime
+      this.vy = strength;
+      this.onGround = false;
+      playSound('jump'); // Play jump sound
     }
     
     update(dt) {
@@ -308,7 +310,10 @@
       // Check ceiling collision - prevent cart from going above screen
       if (this.y <= 0) {
         this.y = 0; // Keep cart at top of screen
-        this.vy = 0; // Stop upward movement
+        // Only stop upward velocity, allow cart to fall back down
+        if (this.vy < 0) {
+          this.vy = 0; // Stop moving up
+        }
       }
       
       // Check ground collision (accounting for higher cart position)
@@ -317,8 +322,13 @@
       const cartGroundLevel = state.groundY - groundOffset;
       if (this.y + this.h >= cartGroundLevel) {
         this.y = cartGroundLevel - this.h;
-        this.vy = 0;
+        // In Flappy Bird style, just stop downward movement but allow flapping up anytime
+        if (this.vy > 0) {
+          this.vy = 0; // Stop falling through ground
+        }
         this.onGround = true;
+      } else {
+        this.onGround = false;
       }
       
       // Update animation
@@ -358,14 +368,10 @@
       this.x = x;
       
       // Random height - spawn boxes at different heights (percentage of canvas height)
-      const highHeight1 = canvas.height * 0.47; // Higher than cart
-      const highHeight2 = canvas.height * 0.52; // Much higher
-      const highHeight3 = canvas.height * 0.625; // Very high
-      const highHeight4 = canvas.height * 0.36; // Moderately high
+      const highHeight1 = canvas.height * 0.8; // Higher than cart
+      const highHeight4 = canvas.height * 0.5; // Moderately high
       const heights = [
         state.groundY - this.h - highHeight1,
-        state.groundY - this.h - highHeight2,
-        state.groundY - this.h - highHeight3,
         state.groundY - this.h - highHeight4
       ];
       this.baseY = heights[Math.floor(Math.random() * heights.length)];
@@ -640,10 +646,10 @@
     // Responsive spawn position (~46% + random 28% of canvas width)
     const baseOffset = canvas.width * 0.46;
     const randomOffset = Math.random() * canvas.width * 0.28;
-    const x = canvas.width + baseOffset + randomOffset;
+    const x = canvas.width + 500 + baseOffset + randomOffset;
     state.collectibles.push(new Collectible(x));
     // Set next spawn time - much more frequent spawning
-    state.nextCollectibleSpawn = 1000 + Math.random() * 1500; // 1-2.5 seconds
+    state.nextCollectibleSpawn = 3000 + Math.random() * 1000; // 1-2.5 seconds
   }
 
   function checkCollisions() {
@@ -849,11 +855,30 @@
     // Draw cart
     cart.draw();
     
+    // Draw score at top left
+    drawScore(W, H);
+    
     if (state.paused) {
       // Show paused overlay (text removed)
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, W, H);
     }
+  }
+  
+  function drawScore(W, H) {
+    // Responsive font size based on canvas width
+    const fontSize = Math.max(32, W * 0.04);
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    
+    // Draw shadow for better visibility
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillText(`Score: ${state.score}`, W * 0.05 + 3, H * 0.04 + 3);
+    
+    // Draw main text
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(`Score: ${state.score}`, W * 0.05, H * 0.04);
   }
 
   function drawWinScreen(W, H) {
