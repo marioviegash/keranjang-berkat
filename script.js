@@ -5,51 +5,40 @@
   const ctx = canvas.getContext('2d');
   
   // ====== Background Music Setup ======
-  let bgMusic = null;
-  let musicInitialized = false;
-  
-  function initBackgroundMusic() {
-    if (musicInitialized) return;
+  // Simple and reliable music handling (same as folder 2)
+  window.addEventListener('load', () => {
+    const music = document.getElementById('bgMusic');
     
-    bgMusic = document.getElementById('bgMusic');
-    if (bgMusic) {
-      bgMusic.volume = 0.3;
-      bgMusic.loop = true;
+    if (music) {
+      music.muted = false; // Unmute the audio (it's muted in HTML)
+      music.volume = 0.3;
       
-      // Try to play music
-      const playMusic = async () => {
-        try {
-          await bgMusic.play();
-          console.log('Background music started successfully');
-          musicInitialized = true;
-        } catch (error) {
-          console.log('Autoplay blocked, music will start on user interaction');
-        }
+      // Try to play music on load
+      const playMusic = () => {
+        music.play().catch(error => {
+          console.log("Autoplay failed, waiting for user interaction...");
+        });
       };
       
       playMusic();
-    }
-  }
-  
-  function startMusicOnInteraction() {
-    if (bgMusic && !musicInitialized) {
-      // Unmute and ensure it's playing
-      bgMusic.muted = false;
-      bgMusic.volume = 0.3;
       
-      if (bgMusic.paused) {
-        bgMusic.play().then(() => {
-          console.log('Background music started after user interaction');
-          musicInitialized = true;
-        }).catch(error => {
-          console.log('Failed to start music:', error);
-        });
-      } else {
-        console.log('Background music unmuted after user interaction');
-        musicInitialized = true;
-      }
+      // Fallback: Play on any user interaction (bypasses autoplay restrictions)
+      document.addEventListener('click', () => {
+        if (music.paused) {
+          music.muted = false; // Ensure it's unmuted
+          music.play();
+        }
+      });
+      
+      // Also try on touch for mobile
+      document.addEventListener('touchstart', () => {
+        if (music.paused) {
+          music.muted = false; // Ensure it's unmuted
+          music.play();
+        }
+      });
     }
-  }
+  });
 
   // ====== Game State ======
   const state = {
@@ -80,6 +69,10 @@
     const targetWidth = 1080;
     const targetHeight = 1920;
     const aspectRatio = targetWidth / targetHeight; // 9:16 ratio (0.5625)
+    
+    // Store original target size for scaling calculations
+    window.targetCanvasWidth = targetWidth;
+    window.targetCanvasHeight = targetHeight;
     
     const maxWidth = window.innerWidth;
     const maxHeight = window.innerHeight;
@@ -113,10 +106,21 @@
     // Store scale factor for responsive elements
     window.gameScale = canvasWidth / targetWidth;
     
+    // Update responsive physics based on scale (mobile devices get adjusted physics)
+    const baseGravity = 1200;
+    const baseJumpVelocity = -1300;
+    const baseScrollSpeed = 316;
+    
+    // Scale physics to match canvas size for consistent gameplay feel
+    state.gravity = baseGravity * window.gameScale;
+    state.jumpVelocity = baseJumpVelocity * window.gameScale;
+    state.scrollSpeed = baseScrollSpeed * window.gameScale;
+    
     // Update existing game elements if they exist
     if (window.cart && typeof window.cart.reset === 'function') {
       window.cart.reset();
-      window.cart.y = state.groundY - window.cart.h - 1000; // Move cart 100 pixels higher
+      const groundOffset = canvas.height * 0.052; // ~5.2% from ground (responsive)
+      window.cart.y = state.groundY - window.cart.h - groundOffset;
     }
     
     console.log(`Canvas resized to: ${canvasWidth}x${canvasHeight} (9:16 ratio), scale: ${window.gameScale.toFixed(3)}`);
@@ -137,9 +141,10 @@
       
       console.log('Splash screen element:', splashScreen);
       console.log('Game screen element:', gameScreen);
+      console.log('Canvas element:', canvas);
       
       if (!splashScreen || !gameScreen) {
-        console.error('Splash screen elements not found');
+        console.error('Required elements not found');
         // Fallback: show game immediately if splash screen not found
         if (gameScreen) {
           gameScreen.classList.remove('hidden');
@@ -147,58 +152,149 @@
         return;
       }
       
+      // Ensure game screen starts hidden
+      gameScreen.classList.add('hidden');
+      
+      let gameStarted = false; // Prevent multiple calls
+      
       function showGame() {
-        console.log('Starting game...');
-        splashScreen.style.display = 'none';
-        gameScreen.classList.remove('hidden');
+        console.log('🔥 showGame() called - gameStarted:', gameStarted);
         
-        // Auto-start the game
-        setTimeout(() => {
-          canvas.focus();
-          state.currentScreen = 'game';
-          startGame(); // Auto-start the game
-          console.log('Game screen shown, canvas focused, and game auto-started');
-        }, 100);
-      }
-      
-      // Remove any existing event listeners first
-      splashScreen.removeEventListener('click', showGame);
-      
-      // Click anywhere on splash screen to start
-      splashScreen.addEventListener('click', (e) => {
-        console.log('Splash screen clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        showGame();
-      });
-      
-      // Click the start button specifically
-      const startButton = document.querySelector('.start-button');
-      if (startButton) {
-        startButton.removeEventListener('click', showGame);
-        startButton.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('Start button clicked');
+        if (gameStarted) {
+          console.log('Game already started, ignoring duplicate call');
+          return; // Prevent double execution
+        }
+        
+        console.log('=== STARTING GAME - DETAILED DEBUG ===');
+        console.log('Step 1: Setting gameStarted flag');
+        gameStarted = true;
+        
+        // Ensure background music plays
+        console.log('Step 2: Starting music');
+        const music = document.getElementById('bgMusic');
+        if (music) {
+          music.muted = false;
+          music.play().then(() => {
+            console.log('✅ Music playing');
+          }).catch(err => {
+            console.warn('❌ Music failed:', err);
+          });
+        } else {
+          console.warn('❌ Music element not found');
+        }
+        
+        // Get elements fresh from DOM (don't trust stored references)
+        console.log('Step 3: Getting elements from DOM');
+        const splash = document.getElementById('splashScreen');
+        const game = document.getElementById('gameScreen');
+        const canv = document.getElementById('game');
+        
+        console.log('Splash element:', splash);
+        console.log('Game element:', game);
+        console.log('Canvas element:', canv);
+        
+        // iOS FIX: Use requestAnimationFrame to ensure DOM operations happen
+        console.log('Step 4: Scheduling DOM changes with requestAnimationFrame');
+        requestAnimationFrame(() => {
+          console.log('🎬 requestAnimationFrame callback executing');
           
-          // Try to start music on game start
-          startMusicOnInteraction();
+          // Remove splash
+          console.log('Step 5: Removing splash');
+          if (splash && splash.parentNode) {
+            splash.parentNode.removeChild(splash);
+            console.log('✅ Splash removed');
+          } else {
+            console.warn('❌ Could not remove splash:', splash);
+          }
           
-          showGame();
+          // Show game
+          console.log('Step 6: Showing game screen');
+          if (game) {
+            game.style.cssText = 'display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; background: #000 !important;';
+            game.className = ''; // Remove all classes including 'hidden'
+            console.log('✅ Game screen styles applied');
+            console.log('Game screen computed style:', window.getComputedStyle(game).display);
+          } else {
+            console.warn('❌ Game element not found');
+          }
+          
+          // Show canvas with debug
+          console.log('Step 7: Showing canvas');
+          if (canv) {
+            canv.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
+            console.log('✅ Canvas styles applied');
+            console.log('Canvas computed style:', window.getComputedStyle(canv).display);
+            
+            // Draw debug rectangle in another frame
+            requestAnimationFrame(() => {
+              console.log('Step 8: Drawing debug on canvas');
+              const context = canv.getContext('2d');
+              context.fillStyle = '#FF0000';
+              context.fillRect(0, 0, canv.width, canv.height);
+              context.fillStyle = '#FFFFFF';
+              context.font = '48px Arial';
+              context.textAlign = 'center';
+              context.fillText('GAME LOADING...', canv.width / 2, canv.height / 2);
+              console.log('✅ Debug rectangle drawn');
+              
+              // Check what's actually on screen
+              console.log('Step 9: Final DOM check');
+              console.log('Splash still in DOM?', document.getElementById('splashScreen') !== null);
+              console.log('Game screen in DOM?', document.getElementById('gameScreen') !== null);
+              console.log('Body children count:', document.body.children.length);
+              console.log('Body children:', Array.from(document.body.children).map(el => el.id || el.tagName));
+              
+              // Start game
+              setTimeout(() => {
+                console.log('Step 10: Starting game');
+                state.currentScreen = 'game';
+                startGame();
+                console.log('=== ✅ GAME STARTED ===');
+              }, 100);
+            });
+          } else {
+            console.warn('❌ Canvas element not found');
+          }
         });
       }
       
-      // Touch events for mobile
-      splashScreen.addEventListener('touchstart', (e) => {
-        console.log('Splash screen touched');
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Try to start music on touch
-        startMusicOnInteraction();
-        
+      // DETAILED TOUCH/CLICK LOGGING
+      console.log('Adding event listeners to splash screen...');
+      
+      // Single click handler on the entire splash screen (simpler and more reliable)
+      splashScreen.addEventListener('click', (e) => {
+        console.log('📱 CLICK event detected on splash screen');
+        console.log('  Event type:', e.type);
+        console.log('  Target:', e.target.tagName, e.target.className);
+        console.log('  Calling showGame()...');
         showGame();
-      });
+      }, { capture: true }); // Use capture phase
+      
+      // Touch events for mobile - use both touchstart and touchend for maximum compatibility
+      splashScreen.addEventListener('touchstart', (e) => {
+        console.log('👆 TOUCHSTART event detected on splash screen');
+        console.log('  Event type:', e.type);
+        console.log('  Touches count:', e.touches.length);
+        console.log('  Target:', e.target.tagName, e.target.className);
+        console.log('  Current target:', e.currentTarget.id);
+        console.log('  Calling showGame()...');
+        showGame();
+      }, { passive: true, capture: true }); // Use capture phase
+      
+      splashScreen.addEventListener('touchend', (e) => {
+        console.log('👆 TOUCHEND event detected on splash screen');
+      }, { passive: true, capture: true });
+      
+      // ALSO add to document as ultimate fallback
+      let documentTouchHandled = false;
+      document.addEventListener('touchstart', (e) => {
+        if (!documentTouchHandled && !gameStarted) {
+          console.log('🌍 DOCUMENT touchstart - fallback triggered');
+          console.log('  Target:', e.target.tagName, e.target.id, e.target.className);
+          documentTouchHandled = true;
+          showGame();
+        }
+      }, { passive: true, capture: true });
       
       // Keyboard support for splash screen
       document.addEventListener('keydown', (e) => {
@@ -212,6 +308,63 @@
       });
       
       console.log('Splash screen initialized');
+      
+      // Add emergency fallback button if screen doesn't transition (Safari iOS fix)
+      setTimeout(() => {
+        // Check if splash is STILL visible (more reliable than gameStarted flag)
+        const splashStillVisible = document.getElementById('splashScreen') !== null;
+        const gameScreenVisible = document.getElementById('gameScreen');
+        const isGameVisible = gameScreenVisible && window.getComputedStyle(gameScreenVisible).display !== 'none';
+        
+        console.log('🔍 Fallback check after 2 seconds:');
+        console.log('  - gameStarted flag:', gameStarted);
+        console.log('  - Splash still in DOM?', splashStillVisible);
+        console.log('  - Game screen visible?', isGameVisible);
+        
+        // Show button if splash is still visible OR game screen is not visible
+        if (splashStillVisible || !isGameVisible) {
+          console.warn('⚠️ Screen did not transition properly!');
+          console.log('Body classes:', document.body.className);
+          console.log('Splash still exists?', splashStillVisible);
+          console.log('Game screen classes:', gameScreenVisible?.className);
+          console.log('Game screen visible?', isGameVisible);
+          
+          // Create bright, unmissable fallback button
+          const fallbackBtn = document.createElement('button');
+          fallbackBtn.textContent = '🎮 TAP TO START 🎮';
+          fallbackBtn.id = 'fallback-start-button';
+          fallbackBtn.style.cssText = `
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 999999 !important;
+            padding: 30px 60px !important;
+            font-size: 28px !important;
+            font-weight: bold !important;
+            background: #ff0000 !important;
+            color: white !important;
+            border: 5px solid yellow !important;
+            border-radius: 20px !important;
+            cursor: pointer !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+            display: block !important;
+            visibility: visible !important;
+          `;
+          fallbackBtn.onclick = () => {
+            console.log('✅ Fallback button clicked');
+            fallbackBtn.remove();
+            showGame();
+          };
+          fallbackBtn.ontouchstart = () => {
+            console.log('✅ Fallback button touched');
+            fallbackBtn.remove();
+            showGame();
+          };
+          document.body.appendChild(fallbackBtn);
+          console.log('Fallback button added to DOM');
+        }
+      }, 2000); // Show button after 2 seconds if screen didn't change
     }
 
   // Load images
@@ -298,10 +451,10 @@
     }
     
     reset() {
-      // Responsive cart size based on canvas dimensions - made even larger and centered
-      const scale = window.gameScale || 1;
-      this.w = Math.round(500 * scale); // Increased from 300 to 400 for even bigger cart
-      this.h = Math.round(500 * scale); // Increased from 300 to 400 for even bigger cart
+      // Responsive cart size based on canvas dimensions (percentage-based for better scaling)
+      // Cart is ~46% of canvas width and ~26% of canvas height for good proportions
+      this.w = Math.round(canvas.width * 0.46);
+      this.h = Math.round(canvas.height * 0.26);
       
       // Center the cart horizontally in the canvas
       this.x = Math.round((canvas.width / 2) - (this.w / 2)); // Center horizontally
@@ -341,7 +494,9 @@
       }
       
       // Check ground collision (accounting for higher cart position)
-      const cartGroundLevel = state.groundY - 100; // Cart's ground level is 100 pixels higher
+      // Responsive ground offset (~5.2% of canvas height)
+      const groundOffset = canvas.height * 0.052;
+      const cartGroundLevel = state.groundY - groundOffset;
       if (this.y + this.h >= cartGroundLevel) {
         this.y = cartGroundLevel - this.h;
         this.vy = 0;
@@ -379,21 +534,21 @@
 
   class Collectible {
     constructor(x) {
-      // Responsive collectible size based on canvas dimensions - match reference image
-      const scale = window.gameScale || 1;
-      this.w = Math.round(200 * scale); // Sized to match reference image proportions
-      this.h = Math.round(200 * scale); // Sized to match reference image proportions
+      // Responsive collectible size based on canvas dimensions (~18.5% of canvas width/height)
+      this.w = Math.round(canvas.width * 0.185);
+      this.h = Math.round(canvas.height * 0.104);
       this.x = x;
-      // Random height - spawn boxes much higher than cart (cart is at groundY - 100)
-      const highHeight1 = Math.round(900 * scale); // Higher than cart
-      const highHeight2 = Math.round(1000 * scale); // Much higher
-      const highHeight3 = Math.round(1200 * scale); // Very high
-      const highHeight4 = Math.round(700 * scale); // Moderately high
+      
+      // Random height - spawn boxes at different heights (percentage of canvas height)
+      const highHeight1 = canvas.height * 0.47; // Higher than cart
+      const highHeight2 = canvas.height * 0.52; // Much higher
+      const highHeight3 = canvas.height * 0.625; // Very high
+      const highHeight4 = canvas.height * 0.36; // Moderately high
       const heights = [
-        state.groundY - this.h - highHeight1, // High level (200px above ground)
-        state.groundY - this.h - highHeight2, // Higher level (350px above ground)
-        state.groundY - this.h - highHeight3, // Very high level (500px above ground)
-        state.groundY - this.h - highHeight4  // Moderate height (150px above ground)
+        state.groundY - this.h - highHeight1,
+        state.groundY - this.h - highHeight2,
+        state.groundY - this.h - highHeight3,
+        state.groundY - this.h - highHeight4
       ];
       this.baseY = heights[Math.floor(Math.random() * heights.length)];
       this.y = this.baseY;
@@ -402,7 +557,7 @@
       this.sparkleTime = 0; // for visual effects
       this.floatTime = Math.random() * Math.PI * 2; // random starting phase for floating
       this.floatSpeed = 2 + Math.random() * 2; // random floating speed
-      this.floatAmplitude = Math.round((20 + Math.random() * 30) * scale); // scaled floating height
+      this.floatAmplitude = Math.round((20 + Math.random() * 30) * (canvas.width / 1080)); // scaled floating height
       this.rotation = 0;
       this.rotationSpeed = (Math.random() - 0.5) * 2; // slower rotation speed
       this.maxRotation = (20 * Math.PI) / 180; // 20 degrees in radians
@@ -543,10 +698,8 @@
 
   // ====== Controls ======
   // Canvas click handler for different screens
-  canvas.addEventListener('click', () => {
-    // Try to start music on any user interaction
-    startMusicOnInteraction();
-    
+  // Handle screen navigation and interactions
+  function handleCanvasInteraction() {
     if (state.currentScreen === 'win') {
       // Go to final screen when win screen is clicked
       // Randomize product selection (1-15)
@@ -563,11 +716,24 @@
       // Restart game when lose screen is clicked
       restartGame();
       console.log('Restarting game from lose screen');
+    } else if (state.currentScreen === 'game' && state.running && !state.paused) {
+      // Jump during gameplay
+      console.log('Cart jumping (touch/click)...');
+      cart.jump();
     } else {
       canvas.focus();
       console.log('Canvas focused');
     }
-  });
+  }
+
+  canvas.addEventListener('click', handleCanvasInteraction);
+  
+  // Touch event for mobile - use touchend for better reliability
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault(); // Prevent click event from also firing
+    console.log('Canvas touched');
+    handleCanvasInteraction();
+  }, { passive: false });
   
   // Removed button event listeners - buttons no longer exist
   
@@ -653,7 +819,10 @@
   }
 
   function spawnCollectible() {
-    const x = canvas.width + 500 + Math.random() * 300; // Reduced spacing for more boxes on screen
+    // Responsive spawn position (~46% + random 28% of canvas width)
+    const baseOffset = canvas.width * 0.46;
+    const randomOffset = Math.random() * canvas.width * 0.28;
+    const x = canvas.width + baseOffset + randomOffset;
     state.collectibles.push(new Collectible(x));
     // Set next spawn time - much more frequent spawning
     state.nextCollectibleSpawn = 1000 + Math.random() * 1500; // 1-2.5 seconds
@@ -688,27 +857,42 @@
     drawSequentialMaps();
   }
   
+  // Cache map dimensions to avoid recalculating every frame
+  let cachedMapDimensions = null;
+  let lastCanvasSize = { width: 0, height: 0 };
+
   function drawSequentialMaps() {
     if (!images.map) return;
     
-    // Calculate dimensions for both maps (assuming same height)
-    const targetHeight = canvas.height * 0.8; // Use 80% of canvas height
+    // Recalculate dimensions only if canvas size changed
+    if (!cachedMapDimensions || 
+        lastCanvasSize.width !== canvas.width || 
+        lastCanvasSize.height !== canvas.height) {
+      
+      const targetHeight = canvas.height * 0.8; // Use 80% of canvas height
+      const mapScale = targetHeight / images.map.height;
+      
+      cachedMapDimensions = {
+        width: images.map.width * mapScale,
+        height: targetHeight,
+        y: canvas.height - targetHeight,
+        cyclesNeeded: Math.ceil(canvas.width / (images.map.width * mapScale)) + 1
+      };
+      
+      lastCanvasSize = { width: canvas.width, height: canvas.height };
+    }
     
-    // Map  dimensions  
-    const mapScale = targetHeight / images.map.height;
-    const mapScaledWidth = images.map.width * mapScale;
-    const mapScaledHeight = targetHeight;
-    
-    // Calculate how many complete cycles we need to fill the screen
-    const cyclesNeeded = Math.ceil(canvas.width / mapScaledWidth) + 1;
-    
-    const y = canvas.height - mapScaledHeight; // Position at bottom of canvas
+    const { width: mapScaledWidth, height: mapScaledHeight, y, cyclesNeeded } = cachedMapDimensions;
     
     // Draw multiple cycles of the combined maps
+    // Use bitwise OR for faster modulo with power-of-2-like behavior
+    const scrollOffset = state.mapScrollOffset % mapScaledWidth;
+    
     for (let cycle = 0; cycle < cyclesNeeded; cycle++) {
       const cycleOffset = cycle * mapScaledWidth;
+      const mapX = cycleOffset - scrollOffset;
       
-      const mapX = cycleOffset - (state.mapScrollOffset % mapScaledWidth);
+      // Only draw if visible on screen
       if (mapX + mapScaledWidth > 0 && mapX < canvas.width) {
         ctx.drawImage(images.map, mapX, y, mapScaledWidth, mapScaledHeight);
       }
@@ -717,7 +901,12 @@
 
   function update(ts) {
     if (!state.lastTs) state.lastTs = ts;
-    const dt = Math.min((ts - state.lastTs) / 1000, 0.033);
+    
+    // Better deltaTime handling to prevent stuttering
+    const rawDt = (ts - state.lastTs) / 1000;
+    // Cap deltaTime more aggressively to prevent large jumps after tab switches
+    // Also set a minimum to prevent too-small values
+    const dt = Math.max(0.008, Math.min(rawDt, 0.025)); // Between 8ms and 25ms
     state.lastTs = ts;
 
     // Voice jump detection
@@ -775,11 +964,9 @@
     // Update scroll offset for background
     state.scrollOffset += state.scrollSpeed * dt;
     
-    // Update map scrolling (only scroll for 30 seconds)
-    const elapsedTime = (ts - state.gameStartTime) / 1000;
-    if (elapsedTime < 30) {
-      state.mapScrollOffset += state.scrollSpeed * dt;
-    }
+    // Keep map scrolling continuously for smooth visual experience
+    // (No longer stopping at 30 seconds to prevent stuttering)
+    state.mapScrollOffset += state.scrollSpeed * dt;
 
     // Update cart
     cart.update(dt);
@@ -1027,7 +1214,7 @@
       ctx.fillStyle = '#FF6B6B';
       ctx.fillRect(W * 0.3, H * 0.3, W * 0.4, H * 0.3);
       ctx.fillStyle = 'white';
-      ctx.font = '24px Arial';
+      ctx.font = `${Math.max(18, W * 0.022)}px Arial`; // Responsive font size
       ctx.textAlign = 'center';
       ctx.fillText(`Product ${state.selectedProduct}`, W / 2, H * 0.45);
     }
@@ -1055,7 +1242,7 @@
       ctx.fillStyle = '#333';
       ctx.fillRect(qrX, qrY, qrSize, qrSize);
       ctx.fillStyle = 'white';
-      ctx.font = '16px Arial';
+      ctx.font = `${Math.max(14, W * 0.015)}px Arial`; // Responsive font size
       ctx.textAlign = 'center';
       ctx.fillText(`QR ${state.selectedProduct}`, W / 2, H * 0.78);
     }
@@ -1066,8 +1253,6 @@
     console.log('Game initialized');
     console.log('Canvas size:', canvas.width, 'x', canvas.height);
     
-    // Initialize background music
-    initBackgroundMusic();
     console.log('State:', state);
     
     // Set initial ground position lower
@@ -1143,5 +1328,29 @@
     }
   });
   ro.observe(canvas);
+
+  // Handle page visibility changes to prevent timing issues
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Reset lastTs when tab becomes hidden to prevent large deltaTime jump
+      state.lastTs = 0;
+      console.log('Tab hidden - reset timing');
+    } else {
+      // Reset lastTs when tab becomes visible again
+      state.lastTs = 0;
+      console.log('Tab visible - reset timing');
+    }
+  });
+
+  // Handle window blur/focus for better cross-browser support
+  window.addEventListener('blur', () => {
+    state.lastTs = 0;
+    console.log('Window blur - reset timing');
+  });
+
+  window.addEventListener('focus', () => {
+    state.lastTs = 0;
+    console.log('Window focus - reset timing');
+  });
 
 })();

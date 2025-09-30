@@ -2,10 +2,29 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   overflow: hidden;
   background: #000;
   font-family: Arial, sans-serif;
+  /* Mobile optimizations */
+  -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  position: fixed;
+}
+
+/* Safe area insets for notched devices (iPhone X, etc.) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 canvas {
@@ -24,6 +43,12 @@ canvas {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
+  /* Mobile touch optimizations */
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Optimized for 1080x1920 portrait screens */
@@ -160,7 +185,60 @@ canvas {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Fade animations for screen transitions */
+.fade-out {
+  animation: fadeOut 0.3s ease-out forwards;
+  pointer-events: none !important;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    visibility: visible;
+    display: block;
+  }
+  100% {
+    opacity: 1;
+    visibility: visible;
+    display: block;
+  }
+}
+
+/* When game is active, ensure game screen is on top */
+body.game-active .game-screen {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 999 !important;
+}
+
+body.game-active .splash-screen {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  z-index: -1 !important;
 }
 
 /* Splash Screen Styles */
@@ -169,7 +247,9 @@ canvas {
   top: 0;
   left: 0;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   background: #000;
   z-index: 1000;
   display: flex;
@@ -178,6 +258,20 @@ canvas {
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* Ensure touch events work */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Safari-specific fixes */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.splash-screen.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
 }
 
 .splash-content {
@@ -187,6 +281,8 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Allow touch events to pass through to parent */
+  pointer-events: none;
 }
 
 .splash-image {
@@ -196,6 +292,8 @@ canvas {
   object-position: center;
   /* Ensure crisp rendering on high-DPI screens */
   image-rendering: -webkit-optimize-contrast;
+  /* Allow touch events to pass through to parent */
+  pointer-events: none;
 }
 
 .splash-overlay {
@@ -252,6 +350,11 @@ canvas {
   box-shadow: 0 8px 16px rgba(0,0,0,0.3);
   transition: all 0.3s ease;
   animation: pulse 2s infinite;
+  /* Mobile touch optimizations */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255, 107, 107, 0.3);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .start-button:hover {
@@ -277,6 +380,16 @@ canvas {
   width: 100vw;
   height: 100vh;
   background: #000;
+  z-index: 500; /* Below splash screen */
+}
+
+.game-screen.hidden {
+  display: none !important;
+}
+
+/* Override when splash is gone - game screen goes to top */
+.game-screen:not(.hidden) {
+  z-index: 1000 !important;
 }
 
 /* Responsive splash screen optimized for 1080x1920 */
@@ -333,3 +446,55 @@ canvas {
 }
 
 /* Control buttons removed - no longer needed */
+
+/* Additional mobile optimizations for small screens */
+@media screen and (max-width: 768px) {
+  .splash-image {
+    object-fit: contain; /* Better fit for mobile screens */
+  }
+  
+  .start-button {
+    padding: 15px 30px;
+    font-size: 20px;
+  }
+}
+
+/* Very small phones (iPhone SE, older Androids) */
+@media screen and (max-width: 375px) {
+  .splash-text h1 {
+    font-size: 32px;
+  }
+  
+  .splash-text p {
+    font-size: 16px;
+  }
+  
+  .start-button {
+    padding: 12px 24px;
+    font-size: 18px;
+  }
+  
+  .hud {
+    font-size: 20px;
+    top: 2vh;
+    left: 2vw;
+  }
+}
+
+/* Landscape mode for mobile */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .splash-text h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  
+  .splash-text p {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+  
+  .start-button {
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+}
