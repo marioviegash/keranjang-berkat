@@ -138,9 +138,11 @@
     function initSplashScreen() {
       splashScreen = document.getElementById('splashScreen');
       gameScreen = document.getElementById('gameScreen');
+      const openingScreen = document.getElementById('openingScreen');
       
       console.log('Splash screen element:', splashScreen);
       console.log('Game screen element:', gameScreen);
+      console.log('Opening screen image:', openingScreen);
       console.log('Canvas element:', canvas);
       
       if (!splashScreen || !gameScreen) {
@@ -198,13 +200,13 @@
         requestAnimationFrame(() => {
           console.log('🎬 requestAnimationFrame callback executing');
           
-          // Remove splash
-          console.log('Step 5: Removing splash');
-          if (splash && splash.parentNode) {
-            splash.parentNode.removeChild(splash);
-            console.log('✅ Splash removed');
+          // Hide splash screen (same as folder 2)
+          console.log('Step 5: Hiding splash screen');
+          if (splash) {
+            splash.style.display = 'none';
+            console.log('✅ Splash hidden (display: none)');
           } else {
-            console.warn('❌ Could not remove splash:', splash);
+            console.warn('❌ Could not hide splash:', splash);
           }
           
           // Show game
@@ -239,7 +241,9 @@
               
               // Check what's actually on screen
               console.log('Step 9: Final DOM check');
-              console.log('Splash still in DOM?', document.getElementById('splashScreen') !== null);
+              const splashEl = document.getElementById('splashScreen');
+              console.log('Splash in DOM?', splashEl !== null);
+              console.log('Splash display:', splashEl ? window.getComputedStyle(splashEl).display : 'not found');
               console.log('Game screen in DOM?', document.getElementById('gameScreen') !== null);
               console.log('Body children count:', document.body.children.length);
               console.log('Body children:', Array.from(document.body.children).map(el => el.id || el.tagName));
@@ -258,63 +262,15 @@
         });
       }
       
-      // DETAILED TOUCH/CLICK LOGGING
-      console.log('Adding event listeners to splash screen...');
-      
-      // First priority: Direct button click handler (most reliable on mobile)
-      const startButton = document.querySelector('.start-button');
-      if (startButton) {
-        console.log('✅ Start button found, adding direct event listener');
-        startButton.addEventListener('click', (e) => {
-          console.log('🎯 BUTTON CLICK detected!');
-          e.stopPropagation(); // Prevent event from bubbling to parent handlers
-          showGame();
-        });
-        
-        startButton.addEventListener('touchend', (e) => {
-          console.log('🎯 BUTTON TOUCHEND detected!');
-          e.preventDefault(); // Prevent ghost clicks
-          e.stopPropagation();
-          showGame();
-        });
+      // Simple approach: Add click event to opening image (same as folder 2)
+      if (openingScreen) {
+        console.log('✅ Adding click event to opening screen image');
+        openingScreen.addEventListener('click', showGame);
       } else {
-        console.warn('⚠️ Start button not found in DOM');
+        console.warn('⚠️ Opening screen image not found');
       }
       
-      // Fallback: Click handler on the entire splash screen
-      splashScreen.addEventListener('click', (e) => {
-        console.log('📱 CLICK event detected on splash screen');
-        console.log('  Event type:', e.type);
-        console.log('  Target:', e.target.tagName, e.target.className);
-        console.log('  Calling showGame()...');
-        showGame();
-      }, { capture: true }); // Use capture phase
-      
-      // Touch events for mobile - use both touchstart and touchend for maximum compatibility
-      splashScreen.addEventListener('touchstart', (e) => {
-        console.log('👆 TOUCHSTART event detected on splash screen');
-        console.log('  Event type:', e.type);
-        console.log('  Touches count:', e.touches.length);
-        console.log('  Target:', e.target.tagName, e.target.className);
-        console.log('  Current target:', e.currentTarget.id);
-        console.log('  Calling showGame()...');
-        showGame();
-      }, { passive: true, capture: true }); // Use capture phase
-      
-      splashScreen.addEventListener('touchend', (e) => {
-        console.log('👆 TOUCHEND event detected on splash screen');
-      }, { passive: true, capture: true });
-      
-      // ALSO add to document as ultimate fallback
-      let documentTouchHandled = false;
-      document.addEventListener('touchstart', (e) => {
-        if (!documentTouchHandled && !gameStarted) {
-          console.log('🌍 DOCUMENT touchstart - fallback triggered');
-          console.log('  Target:', e.target.tagName, e.target.id, e.target.className);
-          documentTouchHandled = true;
-          showGame();
-        }
-      }, { passive: true, capture: true });
+      console.log('Event listener added successfully');
       
       // Keyboard support for splash screen
       document.addEventListener('keydown', (e) => {
@@ -331,22 +287,23 @@
       
       // Add emergency fallback button if screen doesn't transition (Safari iOS fix)
       setTimeout(() => {
-        // Check if splash is STILL visible (more reliable than gameStarted flag)
-        const splashStillVisible = document.getElementById('splashScreen') !== null;
-        const gameScreenVisible = document.getElementById('gameScreen');
-        const isGameVisible = gameScreenVisible && window.getComputedStyle(gameScreenVisible).display !== 'none';
+        // Check if splash is STILL visible (by checking display property)
+        const splashElement = document.getElementById('splashScreen');
+        const splashStillVisible = splashElement && window.getComputedStyle(splashElement).display !== 'none';
+        const gameScreenElement = document.getElementById('gameScreen');
+        const isGameVisible = gameScreenElement && window.getComputedStyle(gameScreenElement).display !== 'none';
         
         console.log('🔍 Fallback check after 2 seconds:');
         console.log('  - gameStarted flag:', gameStarted);
-        console.log('  - Splash still in DOM?', splashStillVisible);
+        console.log('  - Splash visible?', splashStillVisible, '(display:', splashElement ? window.getComputedStyle(splashElement).display : 'not found', ')');
         console.log('  - Game screen visible?', isGameVisible);
         
         // Show button if splash is still visible OR game screen is not visible
         if (splashStillVisible || !isGameVisible) {
           console.warn('⚠️ Screen did not transition properly!');
           console.log('Body classes:', document.body.className);
-          console.log('Splash still exists?', splashStillVisible);
-          console.log('Game screen classes:', gameScreenVisible?.className);
+          console.log('Splash visible?', splashStillVisible);
+          console.log('Game screen classes:', gameScreenElement?.className);
           console.log('Game screen visible?', isGameVisible);
           
           // Create bright, unmissable fallback button
@@ -1302,7 +1259,7 @@
     console.log('=== SPLASH SCREEN DEBUG ===');
     console.log('Splash screen element:', document.getElementById('splashScreen'));
     console.log('Game screen element:', document.getElementById('gameScreen'));
-    console.log('Start button element:', document.querySelector('.start-button'));
+    console.log('Opening screen image:', document.getElementById('openingScreen'));
     console.log('Splash screen classes:', document.getElementById('splashScreen')?.className);
     console.log('Game screen classes:', document.getElementById('gameScreen')?.className);
     console.log('Canvas element:', document.getElementById('game'));

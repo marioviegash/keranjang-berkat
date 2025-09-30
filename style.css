@@ -255,12 +255,8 @@ body.game-active .splash-screen {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  /* Ensure touch events work */
-  -webkit-user-select: none;
-  user-select: none;
+  /* No cursor pointer - only the image inside is clickable */
+  pointer-events: none; /* Block events on container */
   /* Safari-specific fixes */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
@@ -274,17 +270,7 @@ body.game-active .splash-screen {
   z-index: -9999 !important;
 }
 
-.splash-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  /* Enable pointer events for child button */
-  pointer-events: auto;
-}
+/* Removed - no longer needed with simplified structure */
 
 .splash-image {
   position: absolute;
@@ -294,9 +280,14 @@ body.game-active .splash-screen {
   object-position: center;
   /* Ensure crisp rendering on high-DPI screens */
   image-rendering: -webkit-optimize-contrast;
-  /* Allow touch events to pass through to parent */
-  pointer-events: none;
+  /* Make clickable - override parent's pointer-events: none */
+  pointer-events: auto;
+  cursor: pointer;
   z-index: 1;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .start-button {
@@ -398,41 +389,6 @@ body.game-active .splash-screen {
 
 .tap-to-start {
   margin-top: 20px;
-}
-
-.start-button {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-  color: white;
-  border: 3px solid #fff;
-  border-radius: 15px;
-  padding: 20px 40px;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  animation: pulse 2s infinite;
-  /* Mobile touch optimizations */
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(255, 107, 107, 0.3);
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.start-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.4);
-}
-
-.start-button:active {
-  transform: scale(0.95);
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
-  50% { box-shadow: 0 8px 16px rgba(255,107,107,0.5); }
-  100% { box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
 }
 
 /* Game Screen */
