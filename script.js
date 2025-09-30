@@ -1066,7 +1066,14 @@
   }
 
   // Initialize game
+  let gameInitialized = false;
   async function initGame() {
+    if (gameInitialized) {
+      console.log('Game already initialized, skipping');
+      return;
+    }
+    gameInitialized = true;
+    
     console.log('Game initialized');
     console.log('Canvas size:', canvas.width, 'x', canvas.height);
     
@@ -1140,9 +1147,11 @@
     console.log('Window focus - reset timing');
   });
 
-  // Initialize front screen when page loads (same as folder 2)
+  // Initialize front screen and game loop when page loads (same as folder 2)
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - initializing front screen and game');
     initFrontScreen();
+    initGame(); // Start game loop immediately
   });
 
 })();
