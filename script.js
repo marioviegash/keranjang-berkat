@@ -53,7 +53,7 @@
     nextCollectibleSpawn: 800, // Much reduced initial delay for more boxes
     gravity: 1200, // reduced gravity for better jump control
     jumpVelocity: -1300, // increased jump strength for higher jumps
-    groundY: 0, // will be set based on canvas height
+    groundY: 1870, // will be updated by resizeCanvas() based on actual canvas height
     micEnabled: false,
     gameStartTime: 0, // track when game started for 30-second limit
     currentScreen: 'splash', // 'splash', 'game', 'win', 'lose', 'final'
@@ -120,7 +120,7 @@
     if (window.cart && typeof window.cart.reset === 'function') {
       window.cart.reset();
       const groundOffset = canvas.height * 0.052; // ~5.2% from ground (responsive)
-      window.cart.y = state.groundY - window.cart.h - groundOffset;
+      window.cart.y = state.groundY - groundOffset - window.cart.h;
     }
     
     console.log(`Canvas resized to: ${canvasWidth}x${canvasHeight} (9:16 ratio), scale: ${window.gameScale.toFixed(3)}`);
@@ -276,8 +276,9 @@
       // Center the cart horizontally in the canvas
       this.x = Math.round((canvas.width / 2) - (this.w / 2)); // Center horizontally
       
-      // Position cart higher up from the ground
-      this.y = 0;
+      // Position cart on the ground (matching update method's calculation)
+      const groundOffset = canvas.height * 0.052;
+      this.y = state.groundY - groundOffset - this.h;
       this.vy = 0; // vertical velocity
       this.onGround = true;
       this.animTime = 0; // for running animation
@@ -613,11 +614,11 @@
     // Calculate scroll speed for proper finish line timing
     // calculateScrollSpeed(); // Commented out to use manual scroll speed setting
     
-    // Set ground level lower for better positioning
-    state.groundY = canvas.height - 50;
+    // Set ground level (matching resizeCanvas formula)
+    state.groundY = canvas.height - Math.max(50, canvas.height * 0.026);
     
+    // Reset cart (which also positions it on the ground)
     cart.reset();
-    cart.y = state.groundY - cart.h - 100; // Move cart 1000 pixels higher
     
   }
 
@@ -1079,9 +1080,11 @@
     
     console.log('State:', state);
     
-    // Set initial ground position lower
-    state.groundY = canvas.height - 50;
-    cart.y = state.groundY - cart.h - 100; // Move cart 1000 pixels higher
+    // Set initial ground position (matching resizeCanvas formula)
+    state.groundY = canvas.height - Math.max(50, canvas.height * 0.026);
+    // Update cart position (cart was already created with correct position from resizeCanvas)
+    const groundOffset = canvas.height * 0.052;
+    cart.y = state.groundY - groundOffset - cart.h;
     
     // Auto-enable microphone
     try {
@@ -1118,10 +1121,11 @@
     resizeCanvas();
     // Update cart position if it exists and game is running
     if (cart && state.running) {
-      cart.y = state.groundY - cart.h - 1000; // Move cart 1000 pixels higher
+      // Use the same positioning logic as in Cart.reset()
+      const groundOffset = canvas.height * 0.052;
+      cart.y = state.groundY - groundOffset - cart.h;
     }
   });
-  ro.observe(canvas);
 
   // Handle page visibility changes to prevent timing issues
   document.addEventListener('visibilitychange', () => {
