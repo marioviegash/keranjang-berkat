@@ -296,6 +296,66 @@ body.game-active .splash-screen {
   pointer-events: none;
 }
 
+.start-button {
+  position: absolute;
+  bottom: 15vh;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 20px 60px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #FF0050 0%, #FF4081 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  pointer-events: auto; /* Enable clicks on button */
+  box-shadow: 0 8px 24px rgba(255, 0, 80, 0.4);
+  transition: all 0.3s ease;
+  font-family: 'TikTok Sans Display', Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  z-index: 10;
+  /* Mobile touch optimizations */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Animation */
+  animation: pulse 2s infinite;
+}
+
+.start-button:active {
+  transform: translateX(-50%) scale(0.95);
+  box-shadow: 0 4px 12px rgba(255, 0, 80, 0.3);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(255, 0, 80, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(255, 0, 80, 0.6);
+  }
+}
+
+/* Mobile responsive button */
+@media (max-width: 768px) {
+  .start-button {
+    font-size: 24px;
+    padding: 16px 48px;
+    bottom: 12vh;
+  }
+}
+
+@media (max-height: 600px) {
+  .start-button {
+    bottom: 8vh;
+    font-size: 20px;
+    padding: 12px 36px;
+  }
+}
+
 .splash-overlay {
   position: absolute;
   top: 0;
