@@ -261,7 +261,27 @@
       // DETAILED TOUCH/CLICK LOGGING
       console.log('Adding event listeners to splash screen...');
       
-      // Single click handler on the entire splash screen (simpler and more reliable)
+      // First priority: Direct button click handler (most reliable on mobile)
+      const startButton = document.querySelector('.start-button');
+      if (startButton) {
+        console.log('✅ Start button found, adding direct event listener');
+        startButton.addEventListener('click', (e) => {
+          console.log('🎯 BUTTON CLICK detected!');
+          e.stopPropagation(); // Prevent event from bubbling to parent handlers
+          showGame();
+        });
+        
+        startButton.addEventListener('touchend', (e) => {
+          console.log('🎯 BUTTON TOUCHEND detected!');
+          e.preventDefault(); // Prevent ghost clicks
+          e.stopPropagation();
+          showGame();
+        });
+      } else {
+        console.warn('⚠️ Start button not found in DOM');
+      }
+      
+      // Fallback: Click handler on the entire splash screen
       splashScreen.addEventListener('click', (e) => {
         console.log('📱 CLICK event detected on splash screen');
         console.log('  Event type:', e.type);

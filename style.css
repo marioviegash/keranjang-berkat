@@ -281,11 +281,13 @@ body.game-active .splash-screen {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Allow touch events to pass through to parent */
-  pointer-events: none;
+  flex-direction: column;
+  /* Enable pointer events for child button */
+  pointer-events: auto;
 }
 
 .splash-image {
+  position: absolute;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -294,6 +296,7 @@ body.game-active .splash-screen {
   image-rendering: -webkit-optimize-contrast;
   /* Allow touch events to pass through to parent */
   pointer-events: none;
+  z-index: 1;
 }
 
 .start-button {
