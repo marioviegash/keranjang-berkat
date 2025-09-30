@@ -132,217 +132,57 @@
   // Make sure canvas can receive keyboard events
   canvas.focus();
 
-  // ====== Splash Screen Management ======
-  let splashScreen, gameScreen;
+  // ====== Splash Screen Management (Simple approach like Folder 2) ======
+  let splashScreenElement;
+  let gameScreenElement;
+  let openingScreenElement;
   
-    function initSplashScreen() {
-      splashScreen = document.getElementById('splashScreen');
-      gameScreen = document.getElementById('gameScreen');
-      const openingScreen = document.getElementById('openingScreen');
-      
-      console.log('Splash screen element:', splashScreen);
-      console.log('Game screen element:', gameScreen);
-      console.log('Opening screen image:', openingScreen);
-      console.log('Canvas element:', canvas);
-      
-      if (!splashScreen || !gameScreen) {
-        console.error('Required elements not found');
-        // Fallback: show game immediately if splash screen not found
-        if (gameScreen) {
-          gameScreen.classList.remove('hidden');
-        }
-        return;
-      }
-      
-      // Ensure game screen starts hidden
-      gameScreen.classList.add('hidden');
-      
-      let gameStarted = false; // Prevent multiple calls
-      
-      function showGame() {
-        console.log('🔥 showGame() called - gameStarted:', gameStarted);
-        
-        if (gameStarted) {
-          console.log('Game already started, ignoring duplicate call');
-          return; // Prevent double execution
-        }
-        
-        console.log('=== STARTING GAME - DETAILED DEBUG ===');
-        console.log('Step 1: Setting gameStarted flag');
-        gameStarted = true;
-        
-        // Ensure background music plays
-        console.log('Step 2: Starting music');
-        const music = document.getElementById('bgMusic');
-        if (music) {
-          music.muted = false;
-          music.play().then(() => {
-            console.log('✅ Music playing');
-          }).catch(err => {
-            console.warn('❌ Music failed:', err);
-          });
-        } else {
-          console.warn('❌ Music element not found');
-        }
-        
-        // Get elements fresh from DOM (don't trust stored references)
-        console.log('Step 3: Getting elements from DOM');
-        const splash = document.getElementById('splashScreen');
-        const game = document.getElementById('gameScreen');
-        const canv = document.getElementById('game');
-        
-        console.log('Splash element:', splash);
-        console.log('Game element:', game);
-        console.log('Canvas element:', canv);
-        
-        // iOS FIX: Use requestAnimationFrame to ensure DOM operations happen
-        console.log('Step 4: Scheduling DOM changes with requestAnimationFrame');
-        requestAnimationFrame(() => {
-          console.log('🎬 requestAnimationFrame callback executing');
-          
-          // Hide splash screen (same as folder 2)
-          console.log('Step 5: Hiding splash screen');
-          if (splash) {
-            splash.style.display = 'none';
-            console.log('✅ Splash hidden (display: none)');
-          } else {
-            console.warn('❌ Could not hide splash:', splash);
-          }
-          
-          // Show game
-          console.log('Step 6: Showing game screen');
-          if (game) {
-            game.style.cssText = 'display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; background: #000 !important;';
-            game.className = ''; // Remove all classes including 'hidden'
-            console.log('✅ Game screen styles applied');
-            console.log('Game screen computed style:', window.getComputedStyle(game).display);
-          } else {
-            console.warn('❌ Game element not found');
-          }
-          
-          // Show canvas with debug
-          console.log('Step 7: Showing canvas');
-          if (canv) {
-            canv.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
-            console.log('✅ Canvas styles applied');
-            console.log('Canvas computed style:', window.getComputedStyle(canv).display);
-            
-            // Draw debug rectangle in another frame
-            requestAnimationFrame(() => {
-              console.log('Step 8: Drawing debug on canvas');
-              const context = canv.getContext('2d');
-              context.fillStyle = '#FF0000';
-              context.fillRect(0, 0, canv.width, canv.height);
-              context.fillStyle = '#FFFFFF';
-              context.font = '48px Arial';
-              context.textAlign = 'center';
-              context.fillText('GAME LOADING...', canv.width / 2, canv.height / 2);
-              console.log('✅ Debug rectangle drawn');
-              
-              // Check what's actually on screen
-              console.log('Step 9: Final DOM check');
-              const splashEl = document.getElementById('splashScreen');
-              console.log('Splash in DOM?', splashEl !== null);
-              console.log('Splash display:', splashEl ? window.getComputedStyle(splashEl).display : 'not found');
-              console.log('Game screen in DOM?', document.getElementById('gameScreen') !== null);
-              console.log('Body children count:', document.body.children.length);
-              console.log('Body children:', Array.from(document.body.children).map(el => el.id || el.tagName));
-              
-              // Start game
-              setTimeout(() => {
-                console.log('Step 10: Starting game');
-                state.currentScreen = 'game';
-                startGame();
-                console.log('=== ✅ GAME STARTED ===');
-              }, 100);
-            });
-          } else {
-            console.warn('❌ Canvas element not found');
-          }
-        });
-      }
-      
-      // Simple approach: Add click event to opening image (same as folder 2)
-      if (openingScreen) {
-        console.log('✅ Adding click event to opening screen image');
-        openingScreen.addEventListener('click', showGame);
-      } else {
-        console.warn('⚠️ Opening screen image not found');
-      }
-      
-      console.log('Event listener added successfully');
-      
-      // Keyboard support for splash screen
-      document.addEventListener('keydown', (e) => {
-        if (gameScreen && !gameScreen.classList.contains('hidden')) return; // Only on splash screen
-        
-        if (e.code === 'Space' || e.code === 'Enter') {
-          e.preventDefault();
-          console.log('Keyboard start triggered');
-          showGame();
-        }
-      });
-      
-      console.log('Splash screen initialized');
-      
-      // Add emergency fallback button if screen doesn't transition (Safari iOS fix)
-      setTimeout(() => {
-        // Check if splash is STILL visible (by checking display property)
-        const splashElement = document.getElementById('splashScreen');
-        const splashStillVisible = splashElement && window.getComputedStyle(splashElement).display !== 'none';
-        const gameScreenElement = document.getElementById('gameScreen');
-        const isGameVisible = gameScreenElement && window.getComputedStyle(gameScreenElement).display !== 'none';
-        
-        console.log('🔍 Fallback check after 2 seconds:');
-        console.log('  - gameStarted flag:', gameStarted);
-        console.log('  - Splash visible?', splashStillVisible, '(display:', splashElement ? window.getComputedStyle(splashElement).display : 'not found', ')');
-        console.log('  - Game screen visible?', isGameVisible);
-        
-        // Show button if splash is still visible OR game screen is not visible
-        if (splashStillVisible || !isGameVisible) {
-          console.warn('⚠️ Screen did not transition properly!');
-          console.log('Body classes:', document.body.className);
-          console.log('Splash visible?', splashStillVisible);
-          console.log('Game screen classes:', gameScreenElement?.className);
-          console.log('Game screen visible?', isGameVisible);
-          
-          // Create bright, unmissable fallback button
-          const fallbackBtn = document.createElement('button');
-          fallbackBtn.textContent = '🎮 TAP TO START 🎮';
-          fallbackBtn.id = 'fallback-start-button';
-          fallbackBtn.style.cssText = `
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            z-index: 999999 !important;
-            padding: 30px 60px !important;
-            font-size: 28px !important;
-            font-weight: bold !important;
-            background: #ff0000 !important;
-            color: white !important;
-            border: 5px solid yellow !important;
-            border-radius: 20px !important;
-            cursor: pointer !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-            display: block !important;
-            visibility: visible !important;
-          `;
-          fallbackBtn.onclick = () => {
-            console.log('✅ Fallback button clicked');
-            fallbackBtn.remove();
-            showGame();
-          };
-          fallbackBtn.ontouchstart = () => {
-            console.log('✅ Fallback button touched');
-            fallbackBtn.remove();
-            showGame();
-          };
-          document.body.appendChild(fallbackBtn);
-          console.log('Fallback button added to DOM');
-        }
-      }, 2000); // Show button after 2 seconds if screen didn't change
+  function initSplashScreen() {
+    splashScreenElement = document.getElementById('splashScreen');
+    gameScreenElement = document.getElementById('gameScreen');
+    openingScreenElement = document.getElementById('openingScreen');
+    
+    // Add click event to opening screen image
+    if (openingScreenElement) {
+      openingScreenElement.addEventListener('click', startGameTransition);
     }
+    
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        const splash = document.getElementById('splashScreen');
+        if (splash && window.getComputedStyle(splash).display !== 'none') {
+          e.preventDefault();
+          startGameTransition();
+        }
+      }
+    });
+  }
+  
+  function startGameTransition() {
+    // Hide splash screen
+    if (splashScreenElement) {
+      splashScreenElement.style.display = 'none';
+    }
+    
+    // Show game screen
+    if (gameScreenElement) {
+      gameScreenElement.style.display = 'block';
+      gameScreenElement.classList.remove('hidden');
+    }
+    
+    // Unmute and play background music
+    const music = document.getElementById('bgMusic');
+    if (music) {
+      music.muted = false;
+      music.play().catch(err => console.log('Audio autoplay prevented:', err));
+    }
+    
+    // Focus canvas and start game
+    canvas.focus();
+    state.currentScreen = 'game';
+    startGame();
+  }
 
   // Load images
   const images = {};
@@ -1254,38 +1094,11 @@
     requestAnimationFrame(update);
   }
 
-  // Debug function - you can call this from console
-  window.debugSplashScreen = function() {
-    console.log('=== SPLASH SCREEN DEBUG ===');
-    console.log('Splash screen element:', document.getElementById('splashScreen'));
-    console.log('Game screen element:', document.getElementById('gameScreen'));
-    console.log('Opening screen image:', document.getElementById('openingScreen'));
-    console.log('Splash screen classes:', document.getElementById('splashScreen')?.className);
-    console.log('Game screen classes:', document.getElementById('gameScreen')?.className);
-    console.log('Canvas element:', document.getElementById('game'));
-    console.log('========================');
-  };
-  
-  // Force start game function - you can call this from console
+  // Debug helper - call from console if needed
   window.forceStartGame = function() {
     console.log('Force starting game...');
-    const splash = document.getElementById('splashScreen');
-    const game = document.getElementById('gameScreen');
-    if (splash && game) {
-      splash.style.display = 'none';
-      game.classList.remove('hidden');
-      canvas.focus();
-      console.log('Game force started!');
-    } else {
-      console.error('Cannot force start - elements not found');
-    }
+    startGameTransition();
   };
-  
-  // Auto-run debug on load
-  setTimeout(() => {
-    console.log('Auto-running splash screen debug...');
-    window.debugSplashScreen();
-  }, 1000);
 
   // Wait for images and sounds to load before starting
   Promise.all([...imagePromises, ...soundPromises]).then(() => {

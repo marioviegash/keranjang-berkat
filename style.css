@@ -290,65 +290,7 @@ body.game-active .splash-screen {
   user-select: none;
 }
 
-.start-button {
-  position: absolute;
-  bottom: 15vh;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 20px 60px;
-  font-size: 28px;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(135deg, #FF0050 0%, #FF4081 100%);
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  pointer-events: auto; /* Enable clicks on button */
-  box-shadow: 0 8px 24px rgba(255, 0, 80, 0.4);
-  transition: all 0.3s ease;
-  font-family: 'TikTok Sans Display', Arial, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  z-index: 10;
-  /* Mobile touch optimizations */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-  /* Animation */
-  animation: pulse 2s infinite;
-}
-
-.start-button:active {
-  transform: translateX(-50%) scale(0.95);
-  box-shadow: 0 4px 12px rgba(255, 0, 80, 0.3);
-}
-
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 8px 24px rgba(255, 0, 80, 0.4);
-  }
-  50% {
-    box-shadow: 0 8px 32px rgba(255, 0, 80, 0.6);
-  }
-}
-
-/* Mobile responsive button */
-@media (max-width: 768px) {
-  .start-button {
-    font-size: 24px;
-    padding: 16px 48px;
-    bottom: 12vh;
-  }
-}
-
-@media (max-height: 600px) {
-  .start-button {
-    bottom: 8vh;
-    font-size: 20px;
-    padding: 12px 36px;
-  }
-}
+/* start-button styles removed - no longer needed */
 
 .splash-overlay {
   position: absolute;
@@ -422,11 +364,6 @@ body.game-active .splash-screen {
     font-size: clamp(18px, 2.5vw, 28px);
     margin-bottom: clamp(30px, 4vh, 50px);
   }
-  
-  .start-button {
-    font-size: clamp(20px, 2.8vw, 32px);
-    padding: clamp(15px, 2vh, 25px) clamp(30px, 4vw, 50px);
-  }
 }
 
 @media (orientation: landscape) and (max-height: 1200px) {
@@ -438,11 +375,6 @@ body.game-active .splash-screen {
   .splash-text p {
     font-size: clamp(16px, 2vh, 24px);
     margin-bottom: clamp(20px, 3vh, 35px);
-  }
-  
-  .start-button {
-    font-size: clamp(18px, 2.2vh, 26px);
-    padding: clamp(12px, 1.8vh, 20px) clamp(25px, 3.5vh, 40px);
   }
 }
 
@@ -457,11 +389,6 @@ body.game-active .splash-screen {
     font-size: 28px;
     margin-bottom: 50px;
   }
-  
-  .start-button {
-    font-size: 28px;
-    padding: 25px 50px;
-  }
 }
 
 /* Control buttons removed - no longer needed */
@@ -470,11 +397,6 @@ body.game-active .splash-screen {
 @media screen and (max-width: 768px) {
   .splash-image {
     object-fit: contain; /* Better fit for mobile screens */
-  }
-  
-  .start-button {
-    padding: 15px 30px;
-    font-size: 20px;
   }
 }
 
@@ -486,11 +408,6 @@ body.game-active .splash-screen {
   
   .splash-text p {
     font-size: 16px;
-  }
-  
-  .start-button {
-    padding: 12px 24px;
-    font-size: 18px;
   }
   
   .hud {
@@ -510,10 +427,5 @@ body.game-active .splash-screen {
   .splash-text p {
     font-size: 14px;
     margin-bottom: 15px;
-  }
-  
-  .start-button {
-    padding: 10px 20px;
-    font-size: 16px;
   }
 }
