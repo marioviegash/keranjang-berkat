@@ -234,15 +234,15 @@ body.game-active .game-screen {
   z-index: 999 !important;
 }
 
-body.game-active .splash-screen {
+body.game-active .front-screen {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   z-index: -1 !important;
 }
 
-/* Splash Screen Styles */
-.splash-screen {
+/* Front Screen Styles */
+.front-screen {
   position: fixed;
   top: 0;
   left: 0;
@@ -262,7 +262,7 @@ body.game-active .splash-screen {
   transform: translateZ(0);
 }
 
-.splash-screen.hidden {
+.front-screen.hidden {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -272,7 +272,7 @@ body.game-active .splash-screen {
 
 /* Removed - no longer needed with simplified structure */
 
-.splash-image {
+.opening-bg {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -395,7 +395,7 @@ body.game-active .splash-screen {
 
 /* Additional mobile optimizations for small screens */
 @media screen and (max-width: 768px) {
-  .splash-image {
+  .opening-bg {
     object-fit: contain; /* Better fit for mobile screens */
   }
 }

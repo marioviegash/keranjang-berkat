@@ -132,13 +132,13 @@
   // Make sure canvas can receive keyboard events
   canvas.focus();
 
-  // ====== Splash Screen Management (Simple approach like Folder 2) ======
-  let splashScreenElement;
+  // ====== Front Screen Management (Same as Folder 2) ======
+  let frontScreenElement;
   let gameScreenElement;
   let openingScreenElement;
   
-  function initSplashScreen() {
-    splashScreenElement = document.getElementById('splashScreen');
+  function initFrontScreen() {
+    frontScreenElement = document.getElementById('frontScreen');
     gameScreenElement = document.getElementById('gameScreen');
     openingScreenElement = document.getElementById('openingScreen');
     
@@ -150,8 +150,8 @@
     // Keyboard support
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' || e.code === 'Enter') {
-        const splash = document.getElementById('splashScreen');
-        if (splash && window.getComputedStyle(splash).display !== 'none') {
+        const frontScreen = document.getElementById('frontScreen');
+        if (frontScreen && window.getComputedStyle(frontScreen).display !== 'none') {
           e.preventDefault();
           startGameTransition();
         }
@@ -160,9 +160,9 @@
   }
   
   function startGameTransition() {
-    // Hide splash screen
-    if (splashScreenElement) {
-      splashScreenElement.style.display = 'none';
+    // Hide front screen
+    if (frontScreenElement) {
+      frontScreenElement.style.display = 'none';
     }
     
     // Show game screen
@@ -1087,9 +1087,6 @@
     // Initialize button states
     // Button update removed
     
-    // Initialize splash screen
-    initSplashScreen();
-    
     // Start the game loop
     requestAnimationFrame(update);
   }
@@ -1141,6 +1138,11 @@
   window.addEventListener('focus', () => {
     state.lastTs = 0;
     console.log('Window focus - reset timing');
+  });
+
+  // Initialize front screen when page loads (same as folder 2)
+  document.addEventListener('DOMContentLoaded', function() {
+    initFrontScreen();
   });
 
 })();
