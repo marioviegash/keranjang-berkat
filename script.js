@@ -16,7 +16,7 @@
       // Try to play music on load
       const playMusic = () => {
         music.play().catch(error => {
-          console.log("Autoplay failed, waiting for user interaction...");
+          // Autoplay blocked by browser - will play on user interaction
         });
       };
       
@@ -126,7 +126,6 @@
       window.cart.y = state.groundY - groundOffset - window.cart.h;
     }
     
-    console.log(`Canvas resized to: ${canvasWidth}x${canvasHeight} (9:16 ratio), scale: ${window.gameScale.toFixed(3)}`);
   }
   
   window.addEventListener('resize', resizeCanvas);
@@ -178,7 +177,7 @@
     const music = document.getElementById('bgMusic');
     if (music) {
       music.muted = false;
-      music.play().catch(err => console.log('Audio autoplay prevented:', err));
+      music.play().catch(err => { /* Audio autoplay prevented */ });
     }
     
     // Reset timing to prevent lag/delay after idle on splash screen
@@ -469,12 +468,9 @@
       audio.data = new Uint8Array(audio.analyser.frequencyBinCount);
       audio.enabled = true;
       state.micEnabled = true;
-      console.log('Microphone enabled');
-      // Button update removed
     } catch(e) {
       console.error('Microphone access denied:', e);
       state.micEnabled = false;
-      // Button update removed
     }
   }
 
@@ -510,8 +506,6 @@
       // Flappy Bird style: Use consistent flap velocity
       cart.jump();
       
-      // Optional debug (can be removed)
-      // console.log(`🎤 JUMP! Volume: ${level.toFixed(2)}`);
     }
     
     // Update threshold state for next frame
@@ -527,17 +521,13 @@
       // Randomize product selection (1-15)
       state.selectedProduct = Math.floor(Math.random() * 15) + 1;
       state.currentScreen = 'final';
-      console.log('Moving to final screen');
-      console.log(`Selected random product: ${state.selectedProduct}`);
       draw(getLoudness()); // Force redraw the final screen immediately
     } else if (state.currentScreen === 'final') {
       // Restart game when final screen is clicked
       restartGame();
-      console.log('Restarting game from final screen');
     } else if (state.currentScreen === 'lose') {
       // Restart game when lose screen is clicked
       restartGame();
-      console.log('Restarting game from lose screen');
     } else if (state.currentScreen === 'game' && state.running && !state.paused) {
       // Jump during gameplay
       cart.jump();
@@ -553,10 +543,6 @@
     e.preventDefault(); // Prevent click event from also firing
     handleCanvasInteraction();
   }, { passive: false });
-  
-  // Removed button event listeners - buttons no longer exist
-  
-  // Button update function removed - no buttons to update
   
   // Global keyboard event listener (backup)
   document.addEventListener('keydown', (e) => {
@@ -580,7 +566,6 @@
       e.preventDefault();
       if (state.running) {
         state.paused = !state.paused;
-        // Button update removed
       }
     }
   });
@@ -613,7 +598,6 @@
     const gameTime = 30; // seconds
     state.scrollSpeed = totalDistance / gameTime; // pixels per second
     
-    console.log(`Calculated scroll speed: ${state.scrollSpeed} pixels/second for 2x loops`);
   }
 
   function restartGame() {
@@ -1070,15 +1054,10 @@
   let gameInitialized = false;
   async function initGame() {
     if (gameInitialized) {
-      console.log('Game already initialized, skipping');
       return;
     }
     gameInitialized = true;
     
-    console.log('Game initialized');
-    console.log('Canvas size:', canvas.width, 'x', canvas.height);
-    
-    console.log('State:', state);
     
     // Set initial ground position (matching resizeCanvas formula)
     state.groundY = canvas.height - Math.max(50, canvas.height * 0.026);
@@ -1089,13 +1068,9 @@
     // Auto-enable microphone
     try {
       await enableMic();
-      console.log('Microphone auto-enabled');
     } catch (e) {
       console.warn('Could not auto-enable microphone:', e);
     }
-    
-    // Initialize button states
-    // Button update removed
     
     // Start the game loop
     requestAnimationFrame(update);
@@ -1103,13 +1078,11 @@
 
   // Debug helper - call from console if needed
   window.forceStartGame = function() {
-    console.log('Force starting game...');
     startGameTransition();
   };
 
   // Wait for images and sounds to load before starting
   Promise.all([...imagePromises, ...soundPromises]).then(() => {
-    console.log('Images and sounds loaded successfully');
     initGame();
   }).catch(err => {
     console.warn('Some assets failed to load, using fallbacks:', err);
