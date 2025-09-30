@@ -273,10 +273,10 @@
   
   // Load all sound effects
   const soundPromises = [];
-  soundPromises.push(loadSound('jump', 'sounds/jump.mp3'));
-  soundPromises.push(loadSound('getbox', 'sounds/getbox.mp3'));
-  soundPromises.push(loadSound('win', 'sounds/win.mp3'));
-  soundPromises.push(loadSound('lose', 'sounds/lose.mp3'));
+  soundPromises.push(loadSound('jump', 'Sounds/Jump.mp3'));
+  soundPromises.push(loadSound('getbox', 'Sounds/GetBox.mp3'));
+  soundPromises.push(loadSound('win', 'Sounds/Win.mp3'));
+  soundPromises.push(loadSound('lose', 'Sounds/Lose.mp3'));
 
   // Function to play sounds
   function playSound(name) {
